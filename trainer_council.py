@@ -741,7 +741,7 @@ class Council_Trainer(nn.Module):
             s_b = Variable(torch.randn(x_b.size(0), self.style_dim, 1, 1).cuda(self.cuda_device))
             self.loss_dis_a2b_s = []
         if self.do_b2a_conf:
-            s_a = Variable(torch.randn(x_a.size(0), self.style_dim, 1, 1).cuda(self.cuda_device))
+            s_a = Variable(torch.randn(x_a.size(0), self.style_dim, 1, 1).cuda(self.cuda_device))  # 1x64x1x1
             self.loss_dis_b2a_s = []
         self.loss_dis_total_s = []
         for i in range(self.council_size):
@@ -753,7 +753,7 @@ class Council_Trainer(nn.Module):
             if hyperparameters['do_a2b']:
                 c_a, _ = self.gen_a2b_s[i_gen].encode(x_a)
             if hyperparameters['do_b2a']:
-                c_b, _ = self.gen_b2a_s[i_gen].encode(x_b)
+                c_b, _ = self.gen_b2a_s[i_gen].encode(x_b)  # 1x256x16x16
 
             # decode (cross domain)
             if hyperparameters['do_a2b']:
@@ -762,7 +762,7 @@ class Council_Trainer(nn.Module):
 
             if hyperparameters['do_b2a']:
                 x_ba = self.gen_b2a_s[i_gen].decode(c_b, s_a, x_b)
-                x_ba = x_ba if not hyperparameters['dis']['do_Dis_only_gray'] else torch.sum(x_ba.detach(), 1).unsqueeze(1).repeat(1, hyperparameters['input_dim_a'], 1, 1) / hyperparameters['input_dim_a']
+                x_ba = x_ba if not hyperparameters['dis']['do_Dis_only_gray'] else torch.sum(x_ba.detach(), 1).unsqueeze(1).repeat(1, hyperparameters['input_dim_a'], 1, 1) / hyperparameters['input_dim_a']  # 1x3x64x64
 
             # D loss
             if hyperparameters['do_a2b']:

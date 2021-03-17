@@ -50,15 +50,15 @@ class MsImageDis(nn.Module):
         x = x.cuda(self.cuda_device)
         for model in self.cnns:
             outputs.append(model(x))
-            x = self.downsample(x)
+            x = self.downsample(x)  # 1x3x32x32  --> 1x3x16x16
         return outputs
 
     def calc_dis_loss(self, input_fake, input_real):
         # calculate the loss to train D
-        outs0 = self.forward(input_fake)
-        outs1 = self.forward(input_real)
+        outs0 = self.forward(input_fake)  # [1x1x16x16, 1x1x8x8]
+        outs1 = self.forward(input_real)  # [1x1x16x16, 1x1x8x8]
         loss = 0
-
+        # 计算不同scale下的dis值
         for it, (out0, out1) in enumerate(zip(outs0, outs1)):
             if self.gan_type == 'lsgan':
                 loss += torch.mean((out0 - 0)**2) + torch.mean((out1 - 1)**2)
@@ -278,8 +278,8 @@ class AdaINGen(nn.Module):
     def encode(self, images):
         images = images.cuda(self.cuda_device)
         # encode an image to its content and style codes
-        style_fake = self.enc_style(images)
-        content = self.enc_content(images)
+        style_fake = self.enc_style(images)  # 1x64x1x1
+        content = self.enc_content(images)  # 1x256x16x16
         return content, style_fake
 
     def decode(self, content, style, images, return_mask=False):
@@ -344,7 +344,7 @@ class StyleEncoder(nn.Module):
             dim *= 2
         for i in range(n_downsample - 2):
             self.model += [Conv2dBlock(dim, dim, 4, 2, 1, norm=norm, activation=activ, pad_type=pad_type)]
-        self.model += [nn.AdaptiveAvgPool2d(1)] # global average pooling
+        self.model += [nn.AdaptiveAvgPool2d(1)]  # global average pooling
         self.model += [nn.Conv2d(dim, style_dim, 1, 1, 0)]
         self.model = nn.Sequential(*self.model)
         self.output_dim = dim
@@ -374,7 +374,7 @@ class ContentEncoder(nn.Module):
 class Decoder_V2_atten(nn.Module):
     def __init__(self, n_upsample, n_res, dim, output_dim, res_norm='adain', activ='relu', pad_type='zero', num_of_mask_dim_to_add=1):
         super(Decoder_V2_atten, self).__init__()
-        self.num_of_mask_dim_to_add = num_of_mask_dim_to_add # 3  # 2
+        self.num_of_mask_dim_to_add = num_of_mask_dim_to_add  # 3  # 2
         self.model = []
         self.output_dim = output_dim
         self.mask_s = []
